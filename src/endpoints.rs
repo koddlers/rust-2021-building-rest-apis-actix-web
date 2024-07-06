@@ -1,7 +1,7 @@
 use std::error::Error;
 use actix_web::{get, post, delete, put, HttpResponse, Responder, web};
 use crate::database;
-use crate::schema::FlightPlan;
+use crate::schema::{FlightPlan, Message};
 use web::{Path, Json};
 
 
@@ -15,7 +15,7 @@ pub async fn get_all_flight_plan() -> impl Responder {
         }
         None => {
             HttpResponse::NoContent()
-                .body("There are no flight plans in the system");
+                .body("There are no flight plans in the system")
         }
     }
 }
@@ -25,8 +25,11 @@ pub async fn get_all_flight_plan() -> impl Responder {
 pub async fn get_flight_plan_by_id(id: Path<String>) -> impl Responder {
     let flight_plan_id = id.into_inner();
     let db_result = database::get_flight_plan_by_id(flight_plan_id.clone()).unwrap();
+    let message = Message {
+        message: String::from(format!("There is no flight plan with id: {}", flight_plan_id))
+    };
     match db_result {
-        None => HttpResponse::NotFound().body(format!("There is no flight plan with id {flight_plan_id}")),
+        None => HttpResponse::NotFound().json(message),
         Some(flight_plan) => return HttpResponse::Ok().json(flight_plan),
     }
 }
@@ -60,14 +63,14 @@ pub async fn file_flight_plan(flight_plan: Json<FlightPlan>) -> impl Responder {
 
 #[put("/api/v1/flightplan")]
 pub async fn update_flight_plan(flight_plan: Json<FlightPlan>) -> impl Responder {
-    let flight_plan_id = flight_plan.into_inner();
-    match database::update_flight_plan(flight_plan_id.clone()) {
+    let updated_flight_plan = flight_plan.into_inner();
+    match database::update_flight_plan(updated_flight_plan.clone()) {
         Ok(succeeded) => {
             if succeeded {
                 HttpResponse::Ok().finish()
             } else {
                 HttpResponse::NotFound()
-                    .body(format!("There is no flight plan with id {flight_plan_id}"))
+                    .body(format!("There is no flight plan with id {}", updated_flight_plan.flight_plan_id))
             }
         }
         Err(_) => HttpResponse::InternalServerError().finish()
