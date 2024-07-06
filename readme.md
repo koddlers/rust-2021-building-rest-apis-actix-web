@@ -53,6 +53,16 @@ the skills and knowledge needed to implement secure, reliable, and blazingly fas
 └── 04 - Summary
 ```
 
+### Database Setup
+
+Change directory into the `assets` directory. Then, run the following command,
+
+```shell
+sqlite3.exe duckair.db ".read database.sql"
+```
+
+**Note -** Make sure you have `sqlite3` set up before running the above command.
+
 ### Resources
 
 * Course Link - <https://www.pluralsight.com/courses/rust-2021-building-rest-apis-actix-web>
