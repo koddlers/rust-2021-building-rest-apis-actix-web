@@ -1,9 +1,20 @@
-use std::error::Error;
-use actix_web::{get, post, delete, put, HttpResponse, Responder, web};
-use crate::database;
-use crate::schema::{FlightPlan, Message};
-use web::{Path, Json};
+use actix_web::{delete, get, HttpResponse, post, put, Responder, web};
+use web::{Json, Path};
 
+use crate::database;
+use crate::schema::{FlightPlan, Message, User};
+
+#[post("/api/v1/admin/user")]
+pub async fn new_user(user: Json<User>) -> impl Responder {
+    let username = user.clone().name;
+    match database::create_user(user.into_inner()) {
+        Ok(api_key) => {
+            let _user = User { name: username, api_key };
+            HttpResponse::Ok().json(_user)
+        }
+        Err(e) => HttpResponse::InternalServerError().body(e.to_string())
+    }
+}
 
 #[get("/api/v1/flightplan")]
 pub async fn get_all_flight_plan() -> impl Responder {
