@@ -24,3 +24,8 @@ pub struct User {
     pub name: String,
     pub api_key: String,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct Message {
+    pub message: String,
+}
