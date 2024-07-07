@@ -1,17 +1,49 @@
 #![allow(unused)]
 
 use actix_cors::Cors;
-use actix_web::{App, HttpServer};
+use actix_web::{App, Error, HttpMessage, HttpServer};
+use actix_web::dev::ServiceRequest;
 use actix_web::middleware::Logger;
 use env_logger::Env;
 use config::Config;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
+use actix_web_httpauth::extractors::bearer::{BearerAuth, self};
+use actix_web_httpauth::extractors::AuthenticationError;
+use actix_web_httpauth::middleware::HttpAuthentication;
 
-use crate::endpoints::{delete_flight_plan_by_id, file_flight_plan, get_all_flight_plan, get_flight_plan_by_id, new_user, update_flight_plan};
+use crate::endpoints::{
+    delete_flight_plan_by_id, file_flight_plan, get_all_flight_plan, get_flight_plan_by_id,
+    new_user, update_flight_plan,
+};
+use crate::schema::User;
 
 mod schema;
 mod database;
 mod endpoints;
+
+async fn validator(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, (Error, ServiceRequest)> {
+    let config = req.app_data::<bearer::Config>()
+        .cloned()
+        .unwrap_or_default()
+        .scope("");
+
+    match database::get_user(String::from(credentials.token())) {
+        Ok(user) => {
+            match user {
+                None => {
+                    Err((AuthenticationError::from(config).into(), req))
+                }
+                Some(_) => {
+                    req.extensions_mut().insert(user);
+                    Ok(req)
+                }
+            }
+        }
+        Err(_) => {
+            Err((AuthenticationError::from(config).into(), req))
+        }
+    }
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -29,6 +61,7 @@ async fn main() -> std::io::Result<()> {
 
     env_logger::init_from_env(Env::default().default_filter_or("info"));
     HttpServer::new(move || {
+        let authentication_validator = HttpAuthentication::bearer(validator);
         App::new()
             .service(get_flight_plan_by_id)
             .service(get_all_flight_plan)
@@ -36,6 +69,7 @@ async fn main() -> std::io::Result<()> {
             .service(file_flight_plan)
             .service(update_flight_plan)
             .service(new_user)
+            .wrap(authentication_validator)
             .wrap(Logger::default())
             .wrap(
                 Cors::default()
