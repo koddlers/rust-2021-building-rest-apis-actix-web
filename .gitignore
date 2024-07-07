@@ -4,4 +4,4 @@ backend/target
 .code
 .code/**
 db.sqlite
-assets/*.db
+backend/assets/*.db
