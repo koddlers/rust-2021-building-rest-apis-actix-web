@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 actix = "0.13.5"
-actix-web = { version = "4.8.0" }
+actix-web = { version = "4.8.0", features = ["openssl"] }
 config = "0.14.0"
 env_logger = "0.11.3"
 rusqlite = { version = "0.31.0", features = ["bundled"] }
