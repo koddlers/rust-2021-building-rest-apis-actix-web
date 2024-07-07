@@ -73,8 +73,11 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .wrap(
                 Cors::default()
-                    .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
+                    .allowed_methods(vec!["OPTIONS", "GET", "POST", "PUT", "DELETE"])
                     .allow_any_origin()
+                    .allowed_origin("localhost:63342")
+                    .allowed_origin("localhost:3000")
+                    .allowed_origin("localhost:3001")
                     .max_age(3600)
             )
     })

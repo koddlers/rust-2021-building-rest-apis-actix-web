@@ -3,6 +3,10 @@ name = "rust-2021-building-rest-apis-actix-web"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "flight-plan"
+path = "src/main.rs"
+
 [dependencies]
 actix = "0.13.5"
 actix-cors = "0.7.0"
